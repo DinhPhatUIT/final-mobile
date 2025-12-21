@@ -200,48 +200,50 @@ const ChatbotScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-slate-50" edges={["top"]}>
-      {/* Header */}
-      <View className="bg-cyan-600 px-4 py-3">
-        <View className="flex-row items-center justify-between">
-          <TouchableOpacity
-            onPress={() => setIsSidebarOpen(true)}
-            className="w-10 h-10 items-center justify-center bg-white/20 rounded-full mr-3"
-          >
-            <Ionicons name="menu" size={24} color="white" />
-          </TouchableOpacity>
+    <View className="flex-1 bg-slate-50">
+      {/* Header with status bar background */}
+      <SafeAreaView className="bg-cyan-600" edges={["top"]}>
+        <View className="px-4 py-3">
+          <View className="flex-row items-center justify-between">
+            <TouchableOpacity
+              onPress={() => setIsSidebarOpen(true)}
+              className="w-10 h-10 items-center justify-center bg-white/20 rounded-full mr-3"
+            >
+              <Ionicons name="menu" size={24} color="white" />
+            </TouchableOpacity>
 
-          <View className="flex-1">
-            <Text className="text-lg font-bold text-white">
-              {currentSession?.title || "Trợ lý AI"}
-            </Text>
-            <Text className="text-xs text-white/80">
-              {isLoadingHistory
-                ? "Đang tải lịch sử..."
-                : isTyping
-                  ? "Đang trả lời..."
-                  : user
-                    ? "Lịch sử đã được lưu"
-                    : "Chế độ khách"}
-            </Text>
-          </View>
+            <View className="flex-1">
+              <Text className="text-lg font-bold text-white">
+                {currentSession?.title || "Trợ lý AI"}
+              </Text>
+              <Text className="text-xs text-white/80">
+                {isLoadingHistory
+                  ? "Đang tải lịch sử..."
+                  : isTyping
+                    ? "Đang trả lời..."
+                    : user
+                      ? "Lịch sử đã được lưu"
+                      : "Chế độ khách"}
+              </Text>
+            </View>
 
-          <TouchableOpacity
-            onPress={() => setSettings({ ...settings, includeSkinAnalysis: !settings.includeSkinAnalysis })}
-            className={`px-3 py-1.5 rounded-full ${
-              settings.includeSkinAnalysis ? "bg-white" : "bg-white/20"
-            }`}
-          >
-            <Text
-              className={`text-xs font-semibold ${
-                settings.includeSkinAnalysis ? "text-cyan-600" : "text-white"
+            <TouchableOpacity
+              onPress={() => setSettings({ ...settings, includeSkinAnalysis: !settings.includeSkinAnalysis })}
+              className={`px-3 py-1.5 rounded-full ${
+                settings.includeSkinAnalysis ? "bg-white" : "bg-white/20"
               }`}
             >
-              {settings.includeSkinAnalysis ? "🩺 Đã bật" : "🩺 Tắt"}
-            </Text>
-          </TouchableOpacity>
+              <Text
+                className={`text-xs font-semibold ${
+                  settings.includeSkinAnalysis ? "text-cyan-600" : "text-white"
+                }`}
+              >
+                {settings.includeSkinAnalysis ? "🩺 Đã bật" : "🩺 Tắt"}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </SafeAreaView>
 
       {/* Conversation Sidebar */}
       <ConversationSidebar
@@ -280,7 +282,7 @@ const ChatbotScreen: React.FC = () => {
       )}
 
       <ChatComposer onSend={handleSend} disabled={isTyping} />
-    </SafeAreaView>
+    </View>
   );
 };
 

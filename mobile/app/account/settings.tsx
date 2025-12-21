@@ -65,34 +65,17 @@ export default function SettingsScreen() {
       icon: colorScheme === "dark" ? "moon" : colorScheme === "light" ? "sunny" : "contrast",
       onPress: handleThemeChange,
     },
-    {
-      id: "language",
-      title: "Ngôn ngữ",
-      subtitle: "Tiếng Việt",
-      type: "navigation",
-      icon: "language",
-      onPress: () => Alert.alert("Ngôn ngữ", "Tính năng sắp ra mắt"),
-    },
   ];
 
   const analysisSettings: SettingItem[] = [
     {
       id: "autoSave",
       title: "Tự động lưu kết quả",
-      subtitle: "Lưu kết quả phân tích tự động",
+      subtitle: "Lưu kết quả phân tích tự động vào lịch sử",
       type: "toggle",
       value: settings.autoSave,
       icon: "save",
       onPress: () => toggleSetting("autoSave"),
-    },
-    {
-      id: "highQuality",
-      title: "Phân tích chất lượng cao",
-      subtitle: "Tốn nhiều thời gian hơn",
-      type: "toggle",
-      value: settings.highQuality,
-      icon: "sparkles",
-      onPress: () => toggleSetting("highQuality"),
     },
   ];
 
@@ -105,15 +88,6 @@ export default function SettingsScreen() {
       value: settings.analytics,
       icon: "bar-chart",
       onPress: () => toggleSetting("analytics"),
-    },
-    {
-      id: "crashReports",
-      title: "Báo cáo lỗi tự động",
-      subtitle: "Gửi báo cáo khi ứng dụng gặp lỗi",
-      type: "toggle",
-      value: settings.crashReports,
-      icon: "bug",
-      onPress: () => toggleSetting("crashReports"),
     },
   ];
 
@@ -136,20 +110,6 @@ export default function SettingsScreen() {
       type: "navigation",
       icon: "information-circle",
       onPress: () => {},
-    },
-    {
-      id: "terms",
-      title: "Điều khoản sử dụng",
-      type: "navigation",
-      icon: "document-text",
-      onPress: () => Alert.alert("Điều khoản", "Tính năng sắp ra mắt"),
-    },
-    {
-      id: "privacy",
-      title: "Chính sách bảo mật",
-      type: "navigation",
-      icon: "shield-checkmark",
-      onPress: () => Alert.alert("Bảo mật", "Tính năng sắp ra mắt"),
     },
   ];
 
@@ -259,32 +219,6 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Storage */}
-        <View className="mb-5">
-          <Text className="text-base font-bold text-slate-900 mb-3 px-1">
-            Dung lượng
-          </Text>
-          <View className="bg-white rounded-3xl p-2 shadow-sm">
-            <Pressable
-              className="flex-row items-center p-4 active:bg-slate-50 rounded-2xl"
-              onPress={handleClearCache}
-            >
-              <View className="w-11 h-11 rounded-full bg-slate-100 items-center justify-center">
-                <Ionicons name="trash" size={20} color="#0a7ea4" />
-              </View>
-              <View className="flex-1 ml-3.5">
-                <Text className="text-base font-semibold text-slate-900 mb-0.5">
-                  Xóa bộ nhớ cache
-                </Text>
-                <Text className="text-sm text-slate-500">
-                  Giải phóng dung lượng thiết bị
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
-            </Pressable>
-          </View>
-        </View>
-
         {/* About */}
         <View className="mb-5">
           <Text className="text-base font-bold text-slate-900 mb-3 px-1">
@@ -301,11 +235,10 @@ export default function SettingsScreen() {
             <Ionicons name="information-circle" size={20} color="#3b82f6" />
             <View className="flex-1 ml-2">
               <Text className="text-sm font-semibold text-slate-900 mb-1">
-                Cài đặt tùy chỉnh
+                Cài đặt đã lưu
               </Text>
               <Text className="text-sm text-slate-600 leading-5">
-                Tùy chỉnh ứng dụng theo ý thích của bạn. Một số cài đặt có thể
-                ảnh hưởng đến hiệu suất.
+                Tất cả cài đặt được lưu tự động và đồng bộ trên tài khoản của bạn.
               </Text>
             </View>
           </View>

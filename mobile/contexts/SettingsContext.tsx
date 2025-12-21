@@ -10,9 +10,8 @@ import { db } from "@/config/firebase.config";
  * 
  * Features:
  * - Auto-save analysis results
- * - High-quality analysis mode (slower but more detailed)
- * - Analytics & crash reports
- * - Notification preferences
+ * - Analytics & crash reports (for future implementation)
+ * - Notification preferences (for future implementation)
  * - Sync settings across devices via Firestore
  */
 
@@ -21,11 +20,9 @@ const STORAGE_KEY = "@dermascan:settings";
 export interface AppSettings {
   // Analysis settings
   autoSave: boolean;
-  highQuality: boolean;
   
   // Privacy settings
   analytics: boolean;
-  crashReports: boolean;
   
   // Notification settings (placeholder for future implementation)
   notifications: boolean;
@@ -33,9 +30,7 @@ export interface AppSettings {
 
 const DEFAULT_SETTINGS: AppSettings = {
   autoSave: true,
-  highQuality: false,
   analytics: true,
-  crashReports: true,
   notifications: true,
 };
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface NotificationSetting {
   id: string;
@@ -17,99 +18,32 @@ interface NotificationSetting {
   subtitle: string;
   enabled: boolean;
   icon: any;
+  settingKey?: keyof ReturnType<typeof useSettings>["settings"];
 }
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { settings, updateSettings } = useSettings();
 
-  const [notifications, setNotifications] = useState<NotificationSetting[]>([
+  const notificationSettings: NotificationSetting[] = [
     {
-      id: "analysis",
-      title: "Kết quả phân tích",
-      subtitle: "Thông báo khi phân tích hoàn tất",
-      enabled: true,
-      icon: "analytics",
+      id: "notifications",
+      title: "Bật thông báo",
+      subtitle: "Nhận tất cả thông báo từ ứng dụng",
+      enabled: settings.notifications,
+      icon: "notifications",
+      settingKey: "notifications",
     },
-    {
-      id: "tips",
-      title: "Mẹo chăm sóc da",
-      subtitle: "Nhận mẹo hàng ngày về chăm sóc da",
-      enabled: true,
-      icon: "bulb",
-    },
-    {
-      id: "reminders",
-      title: "Nhắc nhở skincare",
-      subtitle: "Nhắc nhở thực hiện routine skincare",
-      enabled: false,
-      icon: "alarm",
-    },
-    {
-      id: "promotions",
-      title: "Ưu đãi & Khuyến mãi",
-      subtitle: "Thông báo về các ưu đãi đặc biệt",
-      enabled: false,
-      icon: "pricetag",
-    },
-    {
-      id: "updates",
-      title: "Cập nhật ứng dụng",
-      subtitle: "Thông báo về tính năng mới",
-      enabled: true,
-      icon: "rocket",
-    },
-  ]);
+  ];
 
-  const [notificationHistory] = useState([
-    {
-      id: "1",
-      title: "Phân tích da hoàn tất",
-      message: "Kết quả phân tích da của bạn đã sẵn sàng",
-      time: "2 giờ trước",
-      icon: "checkmark-circle",
-      color: "#10b981",
-      read: false,
-    },
-    {
-      id: "2",
-      title: "Mẹo chăm sóc da",
-      message: "Uống đủ nước giúp da bạn khỏe mạnh hơn",
-      time: "1 ngày trước",
-      icon: "water",
-      color: "#3b82f6",
-      read: true,
-    },
-    {
-      id: "3",
-      title: "Cập nhật ứng dụng",
-      message: "Phiên bản mới với nhiều tính năng thú vị",
-      time: "3 ngày trước",
-      icon: "rocket",
-      color: "#f59e0b",
-      read: true,
-    },
-  ]);
-
-  const toggleNotification = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((notif) =>
-        notif.id === id ? { ...notif, enabled: !notif.enabled } : notif
-      )
-    );
-  };
-
-  const handleClearAll = () => {
+  const toggleNotification = async (settingKey: keyof typeof settings) => {
+    await updateSettings({ [settingKey]: !settings[settingKey] });
+    
     Alert.alert(
-      "Xóa tất cả thông báo",
-      "Bạn có chắc muốn xóa tất cả thông báo?",
-      [
-        { text: "Hủy", style: "cancel" },
-        {
-          text: "Xóa",
-          style: "destructive",
-          onPress: () => Alert.alert("Đã xóa tất cả thông báo"),
-        },
-      ]
+      "Cài đặt đã lưu",
+      settings[settingKey] 
+        ? "Bạn sẽ không nhận thông báo từ ứng dụng nữa" 
+        : "Bạn sẽ nhận thông báo từ ứng dụng"
     );
   };
 
@@ -125,11 +59,7 @@ export default function NotificationsScreen() {
             <Ionicons name="arrow-back" size={24} color="#1e293b" />
           </Pressable>
           <Text className="text-xl font-bold text-slate-900">Thông báo</Text>
-          <Pressable onPress={handleClearAll}>
-            <Text className="text-[#0a7ea4] font-semibold text-sm">
-              Xóa tất cả
-            </Text>
-          </Pressable>
+          <View className="w-10" />
         </View>
       </View>
 
@@ -140,13 +70,8 @@ export default function NotificationsScreen() {
             Cài đặt thông báo
           </Text>
           <View className="bg-white rounded-3xl p-2 shadow-sm">
-            {notifications.map((notif, index) => (
-              <View
-                key={notif.id}
-                className={`flex-row items-center p-4 ${
-                  index < notifications.length - 1 ? "mb-1" : ""
-                }`}
-              >
+            {notificationSettings.map((notif) => (
+              <View key={notif.id} className="flex-row items-center p-4">
                 <View className="w-11 h-11 rounded-full bg-slate-100 items-center justify-center">
                   <Ionicons name={notif.icon} size={20} color="#0a7ea4" />
                 </View>
@@ -158,7 +83,7 @@ export default function NotificationsScreen() {
                 </View>
                 <Switch
                   value={notif.enabled}
-                  onValueChange={() => toggleNotification(notif.id)}
+                  onValueChange={() => notif.settingKey && toggleNotification(notif.settingKey)}
                   trackColor={{ false: "#cbd5e1", true: "#0a7ea4" }}
                   thumbColor="white"
                 />
@@ -167,73 +92,33 @@ export default function NotificationsScreen() {
           </View>
         </View>
 
-        {/* Recent Notifications */}
-        <View>
-          <Text className="text-base font-bold text-slate-900 mb-3 px-1">
-            Thông báo gần đây
-          </Text>
-          {notificationHistory.length === 0 ? (
-            <View className="bg-white rounded-2xl p-8 items-center">
-              <Ionicons
-                name="notifications-off-outline"
-                size={48}
-                color="#cbd5e1"
-              />
-              <Text className="text-base font-semibold text-slate-900 mt-3 mb-2">
-                Chưa có thông báo
-              </Text>
-              <Text className="text-sm text-slate-500 text-center">
-                Bạn sẽ nhận được thông báo ở đây
-              </Text>
-            </View>
-          ) : (
-            <View className="space-y-3">
-              {notificationHistory.map((item) => (
-                <Pressable
-                  key={item.id}
-                  className={`bg-white rounded-2xl p-4 shadow-sm active:bg-slate-50 ${
-                    !item.read ? "border-2 border-[#0a7ea4]" : ""
-                  }`}
-                >
-                  <View className="flex-row items-start">
-                    <View
-                      className="w-10 h-10 rounded-full items-center justify-center"
-                      style={{ backgroundColor: `${item.color}20` }}
-                    >
-                      <Ionicons name={item.icon} size={20} color={item.color} />
-                    </View>
-                    <View className="flex-1 ml-3">
-                      <View className="flex-row items-center justify-between mb-1">
-                        <Text className="text-base font-semibold text-slate-900">
-                          {item.title}
-                        </Text>
-                        {!item.read && (
-                          <View className="w-2 h-2 rounded-full bg-[#0a7ea4]" />
-                        )}
-                      </View>
-                      <Text className="text-sm text-slate-600 mb-2 leading-5">
-                        {item.message}
-                      </Text>
-                      <Text className="text-xs text-slate-400">{item.time}</Text>
-                    </View>
-                  </View>
-                </Pressable>
-              ))}
-            </View>
-          )}
-        </View>
-
         {/* Info Card */}
-        <View className="bg-blue-50 rounded-2xl p-4 mt-5 border border-blue-100">
+        <View className="bg-blue-50 rounded-2xl p-4 border border-blue-100">
           <View className="flex-row items-start">
             <Ionicons name="information-circle" size={20} color="#3b82f6" />
             <View className="flex-1 ml-2">
               <Text className="text-sm font-semibold text-slate-900 mb-1">
-                Quản lý thông báo
+                Về thông báo
               </Text>
               <Text className="text-sm text-slate-600 leading-5">
-                Bật thông báo để không bỏ lỡ các mẹo chăm sóc da hữu ích và cập
-                nhật mới nhất từ ứng dụng.
+                Chức năng thông báo push hiện đang được phát triển. Hiện tại, ứng dụng sẽ lưu kết quả phân tích vào lịch sử tài khoản của bạn để bạn có thể xem lại bất cứ lúc nào.
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Feature Coming Soon */}
+        <View className="bg-amber-50 rounded-2xl p-4 mt-4 border border-amber-100">
+          <View className="flex-row items-start">
+            <Ionicons name="rocket" size={20} color="#f59e0b" />
+            <View className="flex-1 ml-2">
+              <Text className="text-sm font-semibold text-slate-900 mb-1">
+                Sắp ra mắt
+              </Text>
+              <Text className="text-sm text-slate-600 leading-5">
+                • Thông báo khi phân tích hoàn tất{"\n"}
+                • Nhắc nhở chăm sóc da hàng ngày{"\n"}
+                • Mẹo skincare theo tình trạng da của bạn
               </Text>
             </View>
           </View>
