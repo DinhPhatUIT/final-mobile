@@ -263,6 +263,73 @@ export const getAnalysisHistory = asyncHandler(async (req: Request, res: Respons
 });
 
 /**
+ * GET /api/analysis/latest
+ * Get user's latest analysis for personalization
+ * Requires authentication
+ *
+ * Flow:
+ * 1. Verify user is authenticated
+ * 2. Query Firestore for user's latest analysis
+ * 3. Return latest analysis result or null
+ */
+export const getLatestAnalysis = asyncHandler(async (req: Request, res: Response) => {
+  const requestId = (req as RequestWithId).id;
+  const userId = (req as AuthRequest).user!.uid;
+
+  logger.info('Fetching latest analysis', {
+    requestId,
+    userId,
+  });
+
+  try {
+    const snapshot = await admin
+      .firestore()
+      .collection('analyses')
+      .where('userId', '==', userId)
+      .orderBy('savedAt', 'desc')
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      logger.info('No analysis found for user', {
+        requestId,
+        userId,
+      });
+
+      return successResponse(res, {
+        analysis: null,
+      });
+    }
+
+    const doc = snapshot.docs[0];
+    const analysis = {
+      id: doc.id,
+      ...doc.data(),
+      savedAt: doc.data().savedAt?.toDate().toISOString(),
+      createdAt: doc.data().createdAt?.toDate().toISOString(),
+    };
+
+    logger.info('Latest analysis fetched', {
+      requestId,
+      userId,
+      analysisId: analysis.id,
+    });
+
+    return successResponse(res, {
+      analysis,
+    });
+  } catch (error) {
+    logger.error('Failed to fetch latest analysis', {
+      requestId,
+      userId,
+      error: (error as Error).message,
+    });
+
+    throw new Error('Không thể tải phân tích gần nhất. Vui lòng thử lại.');
+  }
+});
+
+/**
  * DELETE /api/analysis/history/:id
  * Delete an analysis from user's history
  * Requires authentication

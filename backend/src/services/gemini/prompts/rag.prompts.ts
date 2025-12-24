@@ -3,8 +3,13 @@
  */
 
 import type { KnowledgeChunk } from '../../../types/rag.types';
+import type { UserAnalysisContext } from '../rag.service';
 
-export const RAG_ANSWER_PROMPT = (question: string, relevantChunks: KnowledgeChunk[]) => {
+export const RAG_ANSWER_PROMPT = (
+  question: string,
+  relevantChunks: KnowledgeChunk[],
+  userContext?: UserAnalysisContext
+) => {
   const context = relevantChunks
     .map(
       (chunk, index) =>
@@ -12,8 +17,23 @@ export const RAG_ANSWER_PROMPT = (question: string, relevantChunks: KnowledgeChu
     )
     .join('\n\n---\n\n');
 
+  // Format user's skin analysis context if available
+  const userContextInfo = userContext
+    ? `
+### 📊 **THÔNG TIN DA CỦA NGƯỜI DÙNG** (Phân tích gần nhất)
+- **Loại da:** ${userContext.skinType || 'Chưa xác định'}
+- **Các vấn đề da hiện tại:** ${userContext.conditions?.join(', ') || 'Chưa có phân tích'}
+- **Mức độ nghiêm trọng:** ${userContext.riskLevels?.join(', ') || 'Chưa đánh giá'}
+- **Thời gian phân tích:** ${userContext.analyzedAt || 'Chưa có'}
+
+**LƯU Ý:** Sử dụng thông tin này để cá nhân hóa câu trả lời, đưa ra lời khuyên phù hợp với tình trạng da cụ thể của người dùng.
+---
+`
+    : '';
+
   return `
-Bạn là một chuyên gia da liễu AI của DermaCheck. Dựa **DUY NHẤT** vào thông tin được cung cấp trong phần [BỐI CẢNH] dưới đây để trả lời [CÂU HỎI] của người dùng bằng tiếng Việt với giọng điệu chuyên nghiệp và nghiêm túc.
+Bạn là một chuyên gia da liễu AI của DermaCheck. Dựa **DUY NHẤT** vào thông tin được cung cấp trong phần [BỐI CẢNH] và [THÔNG TIN DA CỦA NGƯỜI DÙNG] (nếu có) dưới đây để trả lời [CÂU HỎI] của người dùng bằng tiếng Việt với giọng điệu chuyên nghiệp và nghiêm túc.
+${userContextInfo}
 
 ---
 ### ⚠️ **QUY TẮC BẮT BUỘC**
@@ -87,13 +107,33 @@ Bạn là một chuyên gia da liễu AI của DermaCheck, có kiến thức chu
 6. Trả lời với giọng điệu chuyên gia da liễu - nghiêm túc, chính xác và có trách nhiệm.
 `;
 
-export const CHATBOT_PROMPT = (question: string, context: string) => `
+export const CHATBOT_PROMPT = (
+  question: string,
+  context: string,
+  userContext?: UserAnalysisContext
+) => {
+  const userContextInfo = userContext
+    ? `
+[THÔNG TIN DA CỦA BẠN] (từ phân tích gần nhất):
+- Loại da: ${userContext.skinType || 'Chưa xác định'}
+- Các vấn đề: ${userContext.conditions?.join(', ') || 'Chưa có'}
+- Mức độ: ${userContext.riskLevels?.join(', ') || 'Chưa có'}
+- Phân tích lúc: ${userContext.analyzedAt || 'Chưa có'}
+
+💡 Hãy tham khảo thông tin trên để đưa ra lời khuyên phù hợp với tình trạng da cụ thể của bạn.
+---
+`
+    : '';
+
+  return `
 [BỐI CẢNH TRI THỨC Y KHOA]:
 ${context}
 ---
-[CÂU HỎI CỦA BẠN THÂN]:
+${userContextInfo}
+[CÂU HỎI CỦA BẠN]:
 "${question}"
 `;
+};
 
 export const CONDITION_INFO_PROMPT = (condition: string) =>
   `Cung cấp thông tin tổng quan ngắn gọn về "${condition}" cho người dùng phổ thông.`;

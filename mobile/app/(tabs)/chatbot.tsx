@@ -9,7 +9,6 @@ import { ConversationSidebar } from "@/components/chatbot/ConversationSidebar";
 import { handleApiError } from "@/api/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useChatContext, ChatMessage } from "@/contexts/ChatContext";
-import { updateMessageFeedback } from "@/services/chatHistory.service";
 
 const TypingIndicator = () => (
   <View className="flex-row items-center px-5 py-2">
@@ -153,53 +152,16 @@ const ChatbotScreen: React.FC = () => {
     }
   }, [messages, handleSend]);
 
-  const handleFeedback = useCallback(
-    async (messageId: string, feedback: "helpful" | "not_helpful") => {
-      try {
-        await updateMessageFeedback(messageId, feedback);
-        // Feedback saved to Firebase - ChatContext will reload messages
-      } catch (error) {
-        console.error("Failed to save feedback:", error);
-      }
-    },
-    []
-  );
-
   const renderItem = useCallback(
     ({ item }: { item: ChatMessage }) => (
-      <View>
-        <MessageBubble
-          sender={item.sender}
-          text={item.message}
-          timestamp={new Date(item.timestamp).getTime()}
-          sources={item.sources}
-        />
-
-        {/* Feedback buttons for bot messages */}
-        {item.sender === "bot" && !item.message.includes("❌") && (
-          <View className="flex-row items-center justify-start px-4 mb-4">
-            <Text className="text-xs text-gray-600 mr-2">Tin nhắn này:</Text>
-            <TouchableOpacity
-              onPress={() => handleFeedback(item.id, "helpful")}
-              className="px-3 py-1 rounded-full mr-2 bg-gray-200"
-            >
-              <Text className="text-xs font-medium text-gray-700">
-                👍 Hữu ích
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleFeedback(item.id, "not_helpful")}
-              className="px-3 py-1 rounded-full bg-gray-200"
-            >
-              <Text className="text-xs font-medium text-gray-700">
-                👎 Không hữu ích
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
+      <MessageBubble
+        sender={item.sender}
+        text={item.message}
+        timestamp={new Date(item.timestamp).getTime()}
+        sources={item.sources}
+      />
     ),
-    [handleFeedback]
+    []
   );
 
   return (

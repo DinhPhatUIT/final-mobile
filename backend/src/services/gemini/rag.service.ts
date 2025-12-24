@@ -29,7 +29,17 @@ export interface ChatMessage {
   }>;
 }
 
-export const getGroundedAnswer = async (question: string): Promise<RagResult> => {
+export interface UserAnalysisContext {
+  skinType?: string;
+  conditions?: string[];
+  riskLevels?: string[];
+  analyzedAt?: string;
+}
+
+export const getGroundedAnswer = async (
+  question: string,
+  userContext?: UserAnalysisContext
+): Promise<RagResult> => {
   try {
     const genAI = getGeminiClient();
     const relevantChunks = findRelevantChunks(question);
@@ -44,7 +54,7 @@ export const getGroundedAnswer = async (question: string): Promise<RagResult> =>
     // Khởi tạo model chuẩn
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    const prompt = RAG_ANSWER_PROMPT(question, relevantChunks);
+    const prompt = RAG_ANSWER_PROMPT(question, relevantChunks, userContext);
 
     // Gọi API theo cấu trúc content-based
     const result = await model.generateContent({
@@ -66,7 +76,8 @@ export const getGroundedAnswer = async (question: string): Promise<RagResult> =>
 export const getChatbotResponse = async (
   _history: ChatMessage[],
   text: string,
-  image?: { base64: string; mimeType: string }
+  image?: { base64: string; mimeType: string },
+  userContext?: UserAnalysisContext
 ): Promise<ChatMessage> => {
   try {
     const genAI = getGeminiClient();
@@ -77,7 +88,7 @@ export const getChatbotResponse = async (
         ? relevantChunks.map((c, i) => `Nguồn [${i}]: ${c.content}`).join('\n')
         : 'Không có thông tin bổ trợ.';
 
-    const prompt = CHATBOT_PROMPT(text, context);
+    const prompt = CHATBOT_PROMPT(text, context, userContext);
 
     // Cấu hình model với System Instruction
     const model = genAI.getGenerativeModel({

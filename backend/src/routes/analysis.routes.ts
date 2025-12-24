@@ -8,6 +8,7 @@ import {
   analyzeSkin,
   saveAnalysisResult,
   getAnalysisHistory,
+  getLatestAnalysis,
   deleteAnalysis,
 } from '../controllers/analysis.controller';
 import { optionalAuth, authenticate } from '../middlewares/auth.middleware';
@@ -100,6 +101,23 @@ router.post('/save', authenticate, saveAnalysisResult);
  * }
  */
 router.get('/history', authenticate, getAnalysisHistory);
+
+/**
+ * GET /api/analysis/latest
+ * Get user's latest analysis for personalization
+ *
+ * Middlewares:
+ * - authenticate: REQUIRED - User must be logged in
+ *
+ * Response:
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "analysis": SavedAnalysis | null
+ *   }
+ * }
+ */
+router.get('/latest', authenticate, getLatestAnalysis);
 
 /**
  * DELETE /api/analysis/history/:id

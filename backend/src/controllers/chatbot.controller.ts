@@ -4,6 +4,7 @@
  */
 
 import { Request, Response } from 'express';
+import admin from 'firebase-admin';
 import { asyncHandler } from '../utils/asyncHandler';
 import { successResponse } from '../utils/apiResponse';
 import { GeminiError } from '../utils/errorClasses';
@@ -15,12 +16,48 @@ import {
   getGroundedAnswer,
   getExpertInfoForCondition,
   getChatbotResponse,
+  UserAnalysisContext,
 } from '../services/gemini/rag.service';
 import type {
   ChatQuestionRequest,
   ExpertInfoRequest,
   ChatConversationRequest,
 } from '../schemas/chatbot.schemas';
+
+/**
+ * Helper: Get user's latest analysis for personalization
+ */
+const getUserAnalysisContext = async (userId?: string): Promise<UserAnalysisContext | undefined> => {
+  if (!userId) return undefined;
+
+  try {
+    const snapshot = await admin
+      .firestore()
+      .collection('analyses')
+      .where('userId', '==', userId)
+      .orderBy('savedAt', 'desc')
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) return undefined;
+
+    const data = snapshot.docs[0].data();
+    const result = data.result;
+
+    return {
+      skinType: result?.skinType,
+      conditions: result?.zones?.map((z: any) => z.condition) || [],
+      riskLevels: result?.zones?.map((z: any) => z.riskLevel) || [],
+      analyzedAt: data.savedAt?.toDate().toLocaleDateString('vi-VN') || undefined,
+    };
+  } catch (error) {
+    logger.error('Failed to fetch user analysis context', {
+      userId,
+      error: (error as Error).message,
+    });
+    return undefined;
+  }
+};
 
 /**
  * POST /api/chatbot/question
@@ -57,8 +94,11 @@ export const answerQuestion = asyncHandler(async (req: Request, res: Response) =
   });
 
   try {
+    // Get user's latest analysis for personalization
+    const userContext = await getUserAnalysisContext(userId);
+
     // Get grounded answer from RAG service
-    const result = await getGroundedAnswer(body.question);
+    const result = await getGroundedAnswer(body.question, userContext);
 
     const processingTime = Date.now() - startTime;
 
@@ -67,6 +107,7 @@ export const answerQuestion = asyncHandler(async (req: Request, res: Response) =
       userId,
       sourcesCount: result.sources.length,
       answerLength: result.answer.length,
+      hasUserContext: !!userContext,
       processingTime: `${processingTime}ms`,
     });
 
@@ -233,8 +274,11 @@ export const chat = asyncHandler(async (req: Request, res: Response) => {
         }
       : undefined;
 
-    // Get chatbot response (pass history, text, image separately)
-    const result = await getChatbotResponse(body.history, body.text, cleanedImage);
+    // Get user's latest analysis for personalization
+    const userContext = await getUserAnalysisContext(userId);
+
+    // Get chatbot response (pass history, text, image, and user context)
+    const result = await getChatbotResponse(body.history, body.text, cleanedImage, userContext);
 
     const processingTime = Date.now() - startTime;
 
@@ -243,6 +287,7 @@ export const chat = asyncHandler(async (req: Request, res: Response) => {
       userId,
       responseLength: result.text.length,
       hasSources: !!result.sources && result.sources.length > 0,
+      hasUserContext: !!userContext,
       processingTime: `${processingTime}ms`,
     });
 
